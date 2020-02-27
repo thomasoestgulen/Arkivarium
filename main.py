@@ -13,10 +13,16 @@ folder.
 import os
 import shutil
 import datetime
+
        
 
-folder = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller'
-archive = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller\_Arkiv'
+#folder = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller'
+#archive = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller\_Arkiv'
+
+folder = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test'
+archive = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv'
+
+logFile = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv\logg.txt'
 
 # List of file extentions to include in the archiving process
 include = ['.ifc','.dwg','.nwc']
@@ -27,6 +33,10 @@ exclude = set(['_Arkiv', '_old'])
 today = datetime.datetime.today()
 yesterday = (today - datetime.timedelta(100)).strftime('%Y-%m-%d')
 print(yesterday)
+
+
+
+n = 0
 
 # Walk throuhg alle files and directories in given folder
 for root, dirs, files in os.walk(folder):
@@ -81,6 +91,12 @@ for root, dirs, files in os.walk(folder):
                     print("Haven't you moved in yet?")
                     print("...")
                     shutil.copy(orignFile, newFile)
+                    n += 1
                     print("Ahh... There you go, enjoy you stay")
                     print("From now and till the end of times")
                     print("mohahahahahaha...")
+
+logg = fileDate + "\t|\t" + str(n) + '\n'
+
+with open(logFile, 'a') as f:
+    f.write(logg)
