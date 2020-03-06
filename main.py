@@ -2,7 +2,7 @@
 """
 Created on Wed Feb 26 20:47:41 2020
 
-@author: tostg
+@author: Thomas Østgulen
 
 SUMMARY:
 
@@ -14,6 +14,7 @@ models has been updated.
 import os
 import shutil
 import datetime
+import subprocess
 
 project = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger'
 #project = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium'
@@ -26,11 +27,12 @@ archive = os.path.join(folder, '_Arkiv')
 #folder = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test'
 #archive = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv'
 
-varslingFolder = os.path.join(project, 'RIB\_Generelt grunnlag\_Python\Varsling')
-htmldoc = os.path.join(varslingFolder, 'htmldoc.html')
-fagmodellEpost = os.path.join(varslingFolder, 'fagmodellEpost.vbs')
+bimboi = r'C:\Scripts\SSV\Python'
+#varslingFolder = os.path.join(project, 'RIB\_Generelt grunnlag\_Python\Varsling')
+htmldoc = os.path.join(bimboi, 'htmldoc.html')
+fagmodellEpost = os.path.join(bimboi, 'fagmodellEpost.vbs')
 
-logFile = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv\logg.txt'
+#logFile = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv\logg.txt'
 logFile = os.path.join(archive, 'logg.txt')
 
 
@@ -44,7 +46,7 @@ today = datetime.datetime.today()
 yesterday = (today - datetime.timedelta(1)).strftime('%Y-%m-%d')
 #print(yesterday)
 
-
+#print(htmldoc)
 
 n = 0
 listFagmodeller = []
@@ -56,7 +58,7 @@ for root, dirs, files in os.walk(folder):
     # Check all files in the given folder of a the filetypes given in 
     # the include list. Get last updated date from each file
     for file in files:
-        
+        #print(file)
         base, extention = os.path.splitext(file)
         if extention in include:
         
@@ -103,6 +105,7 @@ for root, dirs, files in os.walk(folder):
                     shutil.copy(orignFile, newFile)
                     n += 1
                     listFagmodeller.append([file, orignFile])
+#                    print(file)
 #                    print("Ahh... There you go, enjoy you stay")
 #                    print("From now and till the end of times")
 #                    print("mohahahahahaha...")
@@ -131,7 +134,8 @@ htmlTable += htmlTableHead
 
 ### HTML Tabel content ### 
 for model in listFagmodeller:
-    htmlTableRow = '<tr><td><a href="{0}">{1}</a></td></tr>'.format(model[0],model[1])
+    
+    htmlTableRow = '<tr><td><a href="{0}">{1}</a></td></tr>'.format(folder ,model[0]) 
     htmlTable += htmlTableRow
 
 # Close the HTML table
@@ -167,9 +171,10 @@ f.write(htmlFile)
 f.close()
 
 ##### Send email if new dicipline models detected #####
-
+#print(len(listFagmodeller))
 if len(listFagmodeller) > 0:
-    print("wee")
-    #subprocess.call(["cscript", fagmodellEpost])
-else:
-    print("Ingen fagmodeller --> ingen epost")
+    #print("Sending...")
+    subprocess.call(["cscript", fagmodellEpost])
+    #print("Sent!")
+#else:
+#    print("Ingen fagmodeller --> ingen epost")
