@@ -17,7 +17,7 @@ import datetime
 import subprocess
 import pymsteams
 
-def htmlTable(folderPath, modelList):
+def htmlTable(columnName, folderPath, modelList):
     htmlTableStr = ("<table align='left'>"
                 "<colgroup>"
                 "<col style='width:100%'>"
@@ -25,11 +25,11 @@ def htmlTable(folderPath, modelList):
                 "<col width='120'>")
     htmlTableHead = ("<tr>"
                     "<th align='left'>{0}</th></tr>").format(
-        "Filnavn")
+        columnName)
     htmlTableStr += htmlTableHead
 
     ### HTML Tabel content ### 
-    for model in modeList:
+    for model in modelList:
         
         htmlTableRow = '<tr><td><a href="{0}">{1}</a></td></tr>'.format(folderPath ,model[2]) 
         htmlTableStr += htmlTableRow
@@ -37,7 +37,7 @@ def htmlTable(folderPath, modelList):
     # Close the HTML table
     htmlTableStr += "</table>"
 
-    return htmlTableStr
+    return str(htmlTableStr)
 
 
 
@@ -89,7 +89,7 @@ yesterday = (today - datetime.timedelta(1)).strftime('%Y-%m-%d')
 j = 0
 listFagmodeller = []
 listGrunnlagsmodeller = []
-# Walk throuhg alle files and directories in given folder
+# Walk through all files and directories in given folder
 for folder in folders:
     n = 0
     archive = os.path.join(folder, '_Arkiv')
@@ -129,15 +129,21 @@ for folder in folders:
                         shutil.copy(orignFile, newFile)
                         n += 1
                         # Deside if its fagmodeller or grunnlagsmodeller
-                        if j == 0:
-                            listFagmodeller.append((base,extention, file, orignFile))
-                        elif j == 1:
-                            listGrunnlagsmodeller.append((base, extention, file, orignFile))
+                    if j == 0:
+                        print("Fagmodell: ", base)
+
+                        listFagmodeller.append((base,extention, file, orignFile))
+                    elif j == 1:
+                        print("Grunnlagsmodell: ", base)
+    
+                        listGrunnlagsmodeller.append((base, extention, file, orignFile))
 
     logg = fileDate + "\t|\t" + str(n) + '\n'
     logFile = os.path.join(archive, 'logg.txt')
     with open(logFile, 'a') as f:
         f.write(logg)
+
+    j+=1
 
 
 # Teams message
@@ -155,6 +161,9 @@ for gm in listGrunnlagsmodeller:
 myMessageSectionFM.text("Fagmodeller")
 myMessageSectionGM.text("Grunnlagsmodeller")
 
+myTeamsMessage.addSection(myMessageSectionFM)
+myTeamsMessage.addSection(myMessageSectionGM)
+
 ##### Create HTML #####
 
 ### HTML Header ###
@@ -162,9 +171,9 @@ htmlFile = ("<!DOCTYPE html><html><head>"
             "<title>Filer som er endret siden sist:</title>"
             "</head><body>")
 # Table Fagmodeller
-htmlFile += htmlTable(folders[0], listFagmodeller)
+htmlFile += htmlTable('Fagmodeller', folders[0], listFagmodeller)
 # Table Grunnlagsmodeller
-htmlFile += htmlTable(folders[0], listFagmodeller)    
+htmlFile += htmlTable("Grunnlagsmodeller", folders[1], listGrunnlagsmodeller)    
 
 ### HTML summary ###
 htmlSummary = "<p>Det er blitt oppdatert {0} fagmodeller og {2} grunnlagsmodeller siden {1}.</p>".format(
@@ -176,8 +185,6 @@ htmlSummary = "<p>Det er blitt oppdatert {0} fagmodeller og {2} grunnlagsmodelle
 # Summary
 htmlFile += htmlSummary
 
-# Table 
-htmlFile += htmlTable
 
 # Add easter egg
 htmlGif = ('<iframe src="https://giphy.com/embed/gjgWQA5QBuBmUZahOP" '
@@ -197,9 +204,10 @@ f.write(htmlFile)
 f.close()
 
 ##### Send email if new dicipline models detected #####
-#print(len(listFagmodeller))
+print(len(listFagmodeller))
+print(len(listGrunnlagsmodeller))
 if len(listFagmodeller) > 0 or len(listGrunnlagsmodeller) > 0:
-    #print("Sending...")
+    print("Sending...")
     subprocess.call(["cscript", fagmodellEpost])
     myTeamsMessage.send()
 
