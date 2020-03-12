@@ -15,17 +15,53 @@ import os
 import shutil
 import datetime
 import subprocess
+import pymsteams
+
+def htmlTable(folderPath, modelList):
+    htmlTableStr = ("<table align='left'>"
+                "<colgroup>"
+                "<col style='width:100%'>"
+                "</colgroup>"
+                "<col width='120'>")
+    htmlTableHead = ("<tr>"
+                    "<th align='left'>{0}</th></tr>").format(
+        "Filnavn")
+    htmlTableStr += htmlTableHead
+
+    ### HTML Tabel content ### 
+    for model in modeList:
+        
+        htmlTableRow = '<tr><td><a href="{0}">{1}</a></td></tr>'.format(folderPath ,model[2]) 
+        htmlTableStr += htmlTableRow
+
+    # Close the HTML table
+    htmlTableStr += "</table>"
+
+    return htmlTableStr
+
+
+
+
+# Marvin @ Gr_Ugly Digital Group
+myTeamsMessage = pymsteams.connectorcard("https://outlook.office.com/webhook/fc8b11e8-2a57-4b9a-abfa-6ee266b746f7@b7872ef0-9a00-4c18-8a4a-c7d25c778a9e/IncomingWebhook/ada2d7a0599b4208ad13feb32f64250e/1d19ccf3-fe7c-4342-9af5-9b17074ac4b1")
+# Create the two individual messages in the Teams message
+myMessageSectionFM = pymsteams.cardsection()
+myMessageSectionGM = pymsteams.cardsection()
+
 
 project = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger'
 #project = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium'
 
-folder = os.path.join(project, '02 Fagmodeller')
-archive = os.path.join(folder, '_Arkiv')
+folderFM = os.path.join(project, '02 Fagmodeller')
+folderGM = os.path.join(project, '01 Grunnlagsmodeller')
+
 #folder = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller'
 #archive = r'\\sweco.se\NO\Oppdrag\SVG\35218\10215682_E39_Sykkelstamveien_Schancheholen-_Sørmarka\000\07 Modeller - Tegninger\02 Fagmodeller\_Arkiv'
 
 #folder = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test'
 #archive = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv'
+
+folders = [folderFM, folderGM]
 
 bimboi = r'C:\Scripts\SSV\Python'
 #varslingFolder = os.path.join(project, 'RIB\_Generelt grunnlag\_Python\Varsling')
@@ -33,7 +69,8 @@ htmldoc = os.path.join(bimboi, 'htmldoc.html')
 fagmodellEpost = os.path.join(bimboi, 'fagmodellEpost.vbs')
 
 #logFile = r'C:\Users\tostg\Documents\Python Scripts\Arkivarium\Test\_Arkiv\logg.txt'
-logFile = os.path.join(archive, 'logg.txt')
+
+
 
 
 # List of file extentions to include in the archiving process
@@ -48,73 +85,75 @@ yesterday = (today - datetime.timedelta(1)).strftime('%Y-%m-%d')
 
 #print(htmldoc)
 
-n = 0
+
+j = 0
 listFagmodeller = []
+listGrunnlagsmodeller = []
 # Walk throuhg alle files and directories in given folder
-for root, dirs, files in os.walk(folder):
-    # Do not walk throuhg folders given in the exclude set 
-    dirs[:] = [d for d in dirs if d not in exclude]    
-    
-    # Check all files in the given folder of a the filetypes given in 
-    # the include list. Get last updated date from each file
-    for file in files:
-        #print(file)
-        base, extention = os.path.splitext(file)
-        if extention in include:
+for folder in folders:
+    n = 0
+    archive = os.path.join(folder, '_Arkiv')
+    for root, dirs, files in os.walk(folder):
+        # Do not walk throuhg folders given in the exclude set 
+        dirs[:] = [d for d in dirs if d not in exclude]    
         
-            orignFile = root + '\\' + file
+        # Check all files in the given folder of a the filetypes given in 
+        # the include list. Get last updated date from each file
+        for file in files:
+            #print(file)
+            base, extention = os.path.splitext(file)
+            if extention in include:
             
-            (mode, ino, dev, nlink, uid, gid,
-             size, atime, mtime, ctime) = os.stat(orignFile)
-           
-            orignDateTime = str(datetime.datetime.fromtimestamp(mtime))
-            fileDate = orignDateTime.split(" ")[0]
-        
-            # Files updatet yestarday or today will be archived to keep track of
-            # an eventual new version
-            if fileDate >= yesterday:
-#                print()
-#                print("HEY! I found a new file:")
-#                print(file)
-#                print("Lets see.. What should I do with you, my friend?")
-                # Folder to archive this file
-                arcDir = os.path.join(archive, file) 
-                # Archived file will have the date first in its file name
-                newFileName = fileDate + '_' + file
-                newFile = os.path.join(arcDir, newFileName)
-
-                # Create a folder for each file if its not already there
-                if not os.path.isdir(arcDir):
-#                    print("You poor fellow, why have you not a home?")
-#                    print("...")
-#                    print("Let me make it for you")
-                    os.mkdir(arcDir)
-#                    print("See. Its warm and cozy, your welcome")
-                    
-                    # Try to make a copy of the original file to the archive directory
-                if os.path.isfile(newFile):
-#                    print("All good here")
-#                    print("Next")
-#                    print()
-                    pass               
-                if not os.path.isfile(newFile):
+                orignFile = root + '\\' + file
+                
+                (mode, ino, dev, nlink, uid, gid,
+                size, atime, mtime, ctime) = os.stat(orignFile)
             
-#                    print("Oh shait")
-#                    print("Haven't you moved in yet?")
-#                    print("...")
-                    shutil.copy(orignFile, newFile)
-                    n += 1
-                    listFagmodeller.append([file, orignFile])
-#                    print(file)
-#                    print("Ahh... There you go, enjoy you stay")
-#                    print("From now and till the end of times")
-#                    print("mohahahahahaha...")
+                orignDateTime = str(datetime.datetime.fromtimestamp(mtime))
+                fileDate = orignDateTime.split(" ")[0]
+            
+                # Files updatet yestarday or today will be archived to keep track of
+                # an eventual new version
+                if fileDate >= yesterday:
+                    # Folder to archive this file
+                    arcDir = os.path.join(archive, file) 
+                    # Archived file will have the date first in its file name
+                    newFileName = fileDate + '_' + file
+                    newFile = os.path.join(arcDir, newFileName)
 
-logg = fileDate + "\t|\t" + str(n) + '\n'
+                    # Create a folder for each file if its not already there
+                    if not os.path.isdir(arcDir):                        
+                        os.mkdir(arcDir) 
+                    # Try to make a copy of the original file to the archive directory             
+                    if not os.path.isfile(newFile):
+                        shutil.copy(orignFile, newFile)
+                        n += 1
+                        # Deside if its fagmodeller or grunnlagsmodeller
+                        if j == 0:
+                            listFagmodeller.append((base,extention, file, orignFile))
+                        elif j == 1:
+                            listGrunnlagsmodeller.append((base, extention, file, orignFile))
 
-with open(logFile, 'a') as f:
-    f.write(logg)
+    logg = fileDate + "\t|\t" + str(n) + '\n'
+    logFile = os.path.join(archive, 'logg.txt')
+    with open(logFile, 'a') as f:
+        f.write(logg)
 
+
+# Teams message
+myTeamsMessage.title("")
+myTeamsMessage.text(f"I går, {yesterday}, ble følgende filer oppdatert")
+myTeamsMessage.color('red')
+
+# Make Teams tables
+for fm in listFagmodeller:
+    myMessageSectionFM.addFact(f"{fm[0]}", f"{fm[1]}")
+
+for gm in listGrunnlagsmodeller:
+    myMessageSectionGM.addFact(f"{gm[0]}", f"{gm[1]}")
+
+myMessageSectionFM.text("Fagmodeller")
+myMessageSectionGM.text("Grunnlagsmodeller")
 
 ##### Create HTML #####
 
@@ -122,29 +161,16 @@ with open(logFile, 'a') as f:
 htmlFile = ("<!DOCTYPE html><html><head>"
             "<title>Filer som er endret siden sist:</title>"
             "</head><body>")
-htmlTable = ("<table align='left'>"
-             "<colgroup>"
-             "<col style='width:100%'>"
-             "</colgroup>"
-             "<col width='120'>")
-htmlTableHead = ("<tr>"
-                 "<th align='left'>{0}</th></tr>").format(
-    "Filnavn")
-htmlTable += htmlTableHead
+# Table Fagmodeller
+htmlFile += htmlTable(folders[0], listFagmodeller)
+# Table Grunnlagsmodeller
+htmlFile += htmlTable(folders[0], listFagmodeller)    
 
-### HTML Tabel content ### 
-for model in listFagmodeller:
-    
-    htmlTableRow = '<tr><td><a href="{0}">{1}</a></td></tr>'.format(folder ,model[0]) 
-    htmlTable += htmlTableRow
-
-# Close the HTML table
-htmlTable += "</table>"
-    
 ### HTML summary ###
-htmlSummary = "<p>Det er blitt oppdatert {0} fagmodeller siden {1}.</p>".format(
+htmlSummary = "<p>Det er blitt oppdatert {0} fagmodeller og {2} grunnlagsmodeller siden {1}.</p>".format(
     len(listFagmodeller),
-    yesterday)
+    yesterday,
+    len(listGrunnlagsmodeller))
 
 ##### Structure the HTML document #####
 # Summary
@@ -172,9 +198,11 @@ f.close()
 
 ##### Send email if new dicipline models detected #####
 #print(len(listFagmodeller))
-if len(listFagmodeller) > 0:
+if len(listFagmodeller) > 0 or len(listGrunnlagsmodeller) > 0:
     #print("Sending...")
     subprocess.call(["cscript", fagmodellEpost])
+    myTeamsMessage.send()
+
     #print("Sent!")
 #else:
 #    print("Ingen fagmodeller --> ingen epost")
